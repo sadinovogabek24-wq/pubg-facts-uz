@@ -1,0 +1,46 @@
+
+name: PUBG Facts Video Automation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  create-video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repositoryni yuklash
+        uses: actions/checkout@v4
+
+      - name: Pythonni sozlash
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: FFmpeg o'rnatish
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Kutubxonalarni o'rnatish
+        run: |
+          pip install -r requirements.txt
+
+      - name: PUBG videosini yaratish
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python main.py
+
+      - name: Videoni saqlash
+        run: |
+          git config user.name "PUBG Facts Bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add output/
+          git diff --cached --quiet || git commit -m "New PUBG video"
+          git push
